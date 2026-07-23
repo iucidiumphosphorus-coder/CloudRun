@@ -5,7 +5,13 @@ $password = 'testsql1';
 
 mysqli_report(MYSQLI_REPORT_OFF);
 
-$conn = new mysqli('/cloudsql/cloudrun-503301:us-central1:testsql1', $username, $password, $dbname);
+$conn = new mysqli(
+    '/cloudsql/cloudrun-503301:us-central1:cloudrun',
+    $username,
+    $password,
+    $dbname
+);
+
 if ($conn->connect_error) {
     die("CloudRun DB接続失敗: " . $conn->connect_error);
 }
