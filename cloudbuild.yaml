@@ -1,0 +1,9 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'us-docker.pkg.dev/cloudrun-503301/web-app/web-app:latest', '.']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'us-docker.pkg.dev/cloudrun-503301/web-app/web-app:latest']
+
+images:
+  - 'us-docker.pkg.dev/cloudrun-503301/web-app/web-app:latest'
