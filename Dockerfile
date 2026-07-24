@@ -12,10 +12,8 @@ RUN sed -i 's/<VirtualHost *:80>/<VirtualHost *:8080>/' /etc/apache2/sites-enabl
 ADD https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.10.1/cloud-sql-proxy.linux.amd64 /cloud-sql-proxy
 RUN chmod +x /cloud-sql-proxy
 
-# Cloud SQL Proxy を起動（Cloud Run は自動で Unix ソケットを使う）
-CMD /cloud-sql-proxy $DB_HOST & apache2-foreground
+# Cloud SQL Proxy を起動（ソケット作成を待ってから Apache 起動）
+CMD ["/bin/sh", "-c", "/cloud-sql-proxy $DB_HOST & sleep 5 && apache2-foreground"]
 
 # アプリ配置
 COPY . /var/www/html/
-
-
