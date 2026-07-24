@@ -5,7 +5,7 @@
 // ---------------------------
 if (isset($_GET['logout'])) {
    // IAP の内部セッション削除 URL にリダイレクト
-   header("Location: https://iucidium.com/_gcp_iap/clear_login_cookie");
+   header("Location: https://web-app-787036707508.us-east1.run.app/_gcp_iap/clear_login_cookie");
    exit;
 }
 
