@@ -6,10 +6,12 @@ $password = 'testsql1';
 mysqli_report(MYSQLI_REPORT_OFF);
 
 $conn = new mysqli(
-    '/cloudsql/cloudrun-503301:us-central1:cloudrun',
-    $username,
-    $password,
-    $dbname
+    'localhost',
+    'testsql1',
+    'testsql1',
+    'test_db',
+    null,
+    '/cloudsql/cloudrun-503301:us-east1:cloudrun'
 );
 
 if ($conn->connect_error) {
