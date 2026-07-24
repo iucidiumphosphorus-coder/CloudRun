@@ -10,51 +10,30 @@ session_set_cookie_params([
 session_start();
 
 // ======================================================
-//  初回ログイン時のセッション初期化（追加）
-// ======================================================
-if (!isset($_SESSION['initialized'])) {
-    session_regenerate_id(true);  // セッション固定攻撃対策
-    $_SESSION['ip'] = $_SERVER['REMOTE_ADDR'];          // IP保存
-    $_SESSION['ua'] = $_SERVER['HTTP_USER_AGENT'];      // UA保存
-    $_SESSION['last_access'] = time();                  // 最終アクセス時刻
-    $_SESSION['initialized'] = true;
-
-    // ログイン履歴をDBに記録（追加）
-    $stmt2 = $conn->prepare(
-        "INSERT INTO login_logs (userid, ip, ua, time) VALUES (?, ?, ?, ?)"
-    );
-    $userid = $_SESSION['userid'];
-    $ip     = $_SERVER['REMOTE_ADDR'];
-    $ua     = $_SERVER['HTTP_USER_AGENT'];
-    $time   = date('Y-m-d H:i:s');
-    $stmt2->bind_param("ssss", $userid, $ip, $ua, $time);
-    $stmt2->execute();
-
-    // Cloud Logging にも出力（リアルタイム監視用）
-    error_log("LOGIN: user=$userid ip=$ip ua=$ua");
-}
-
-// ======================================================
 //  セッション盗難チェック（追加）
 // ======================================================
-if ($_SESSION['ip'] !== $_SERVER['REMOTE_ADDR']) {
-    header("Location: file_search.php?logout=1");
-    exit;
-}
+if (isset($_SESSION['initialized'])) {
 
-if ($_SESSION['ua'] !== $_SERVER['HTTP_USER_AGENT']) {
-    header("Location: file_search.php?logout=1");
-    exit;
-}
+    // IPチェック
+    if ($_SESSION['ip'] !== $_SERVER['REMOTE_ADDR']) {
+        header("Location: file_search.php?logout=1");
+        exit;
+    }
 
-// ======================================================
-//  セッション有効期限チェック（追加）
-// ======================================================
-if (time() - $_SESSION['last_access'] > 1800) { // 30分
-    header("Location: file_search.php?logout=1");
-    exit;
+    // UAチェック
+    if ($_SESSION['ua'] !== $_SERVER['HTTP_USER_AGENT']) {
+        header("Location: file_search.php?logout=1");
+        exit;
+    }
+
+    // セッション有効期限チェック（30分）
+    if (time() - $_SESSION['last_access'] > 1800) {
+        header("Location: file_search.php?logout=1");
+        exit;
+    }
+
+    $_SESSION['last_access'] = time();
 }
-$_SESSION['last_access'] = time();
 
 // ======================================================
 //  IAP ログアウト処理（元のコード）
@@ -83,6 +62,32 @@ $conn = new mysqli(
 
 if ($conn->connect_error) {
     die("CloudRun DB接続失敗: " . $conn->connect_error);
+}
+
+// ======================================================
+//  初回ログイン時のセッション初期化
+// ======================================================
+if (!isset($_SESSION['initialized'])) {
+
+    session_regenerate_id(true);
+    $_SESSION['ip']          = $_SERVER['REMOTE_ADDR'];
+    $_SESSION['ua']          = $_SERVER['HTTP_USER_AGENT'];
+    $_SESSION['last_access'] = time();
+    $_SESSION['initialized'] = true;
+
+    // ログイン履歴をDBに記録
+    $stmt2 = $conn->prepare(
+        "INSERT INTO login_logs (userid, ip, ua, time) VALUES (?, ?, ?, ?)"
+    );
+    $userid = $_SESSION['userid'];
+    $ip     = $_SERVER['REMOTE_ADDR'];
+    $ua     = $_SERVER['HTTP_USER_AGENT'];
+    $time   = date('Y-m-d H:i:s');
+    $stmt2->bind_param("ssss", $userid, $ip, $ua, $time);
+    $stmt2->execute();
+
+    // Cloud Logging にも出力
+    error_log("LOGIN: user=$userid ip=$ip ua=$ua");
 }
 
 // ======================================================
