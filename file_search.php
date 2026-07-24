@@ -60,7 +60,10 @@ else {
 <body>
 
 <h2>📁 ファイル一覧・検索システム (CloudRun)</h2>
-<p>Cloud SQL 接続検証用</p>
+   <a href="/file_search.php?logout=1"
+      style="padding:6px 10px; background:#fff; border:1px solid #ccc; border-radius:3px; text-decoration:none; font-size:14px; font-weight:normal;">
+      ログアウト（IAP の内部セッション削除）
+   </a>
 
 <div class="search-box">
     <form action="" method="GET">
