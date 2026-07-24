@@ -1,4 +1,14 @@
 <?php
+
+// ---------------------------
+// IAP ログアウト処理（内部セッション削除版）
+// ---------------------------
+if (isset($_GET['logout'])) {
+   // IAP の内部セッション削除 URL にリダイレクト
+   header("Location: https://iucidium.com/_gcp_iap/clear_login_cookie");
+   exit;
+}
+
 $dbname = 'test_db';
 $username = 'testsql1';
 $password = 'testsql1';
