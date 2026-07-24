@@ -59,11 +59,15 @@ else {
 </head>
 <body>
 
-<h2>📁 ファイル一覧・検索システム (CloudRun)</h2>
-   <a href="/file_search.php?logout=1"
-      style="padding:6px 10px; background:#fff; border:1px solid #ccc; border-radius:3px; text-decoration:none; font-size:14px; font-weight:normal;">
-      ログアウト（IAP の内部セッション削除）
-   </a>
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+    <h2 style="margin:0;">📁 ファイル一覧・検索システム (CloudRun)</h2>
+
+    <a href="/file_search.php?logout=1"
+       style="padding:6px 10px; background:#fff; border:1px solid #ccc; border-radius:3px;
+              text-decoration:none; font-size:14px; font-weight:normal;">
+        ログアウト（IAP の内部セッション削除）
+    </a>
+</div>
 
 <div class="search-box">
     <form action="" method="GET">
