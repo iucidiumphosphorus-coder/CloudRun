@@ -79,7 +79,7 @@ if (!isset($_SESSION['initialized'])) {
     $stmt2 = $conn->prepare(
         "INSERT INTO login_logs (userid, ip, ua, time) VALUES (?, ?, ?, ?)"
     );
-    $userid = $_SESSION['userid'];
+    $userid = $_SESSION['userid'] ?? 'unknown';
     $ip     = $_SERVER['REMOTE_ADDR'];
     $ua     = $_SERVER['HTTP_USER_AGENT'];
     $time   = date('Y-m-d H:i:s');
