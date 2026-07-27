@@ -9,32 +9,132 @@ session_set_cookie_params([
 ]);
 session_start();
 
-// ======================================================
-//  ログイン試行ログ（成功・失敗）
-// ======================================================
 $ip = $_SERVER['REMOTE_ADDR'];
 $ua = $_SERVER['HTTP_USER_AGENT'];
 $userid = $_SESSION['userid'] ?? 'unknown';
+
+// ======================================================
+//  DB接続（ログイン試行制御より前に必須）
+// ======================================================
+$dbname   = getenv('DB_NAME');
+$username = getenv('DB_USER');
+$password = getenv('DB_PASS');
+
+$conn = new mysqli('127.0.0.1', $username, $password, $dbname, 3306);
+
+if ($conn->connect_error) {
+    error_log("DB CONNECT FAILED: ip=$ip ua=$ua error=" . $conn->connect_error);
+    die("CloudRun DB接続失敗: " . $conn->connect_error);
+}
+
+error_log("DB CONNECT SUCCESS: ip=$ip ua=$ua");
+
+// ======================================================
+//  ログイン試行ログ（成功・失敗）
+// ======================================================
 error_log("LOGIN ATTEMPT: user=$userid ip=$ip ua=$ua");
 
 // ======================================================
 //  セッション盗難チェック
 // ======================================================
 if (isset($_SESSION['initialized'])) {
+
     // UAチェック
     if ($_SESSION['ua'] !== $_SERVER['HTTP_USER_AGENT']) {
         error_log("LOGIN FAILED: user=$userid ip=$ip ua=$ua reason=ua_mismatch");
-        header("Location: file_search.php?logout=1");
+        header("Location: file_search.php?login_failed=1");
         exit;
     }
+
     // セッション有効期限チェック（30分）
     if (time() - $_SESSION['last_access'] > 1800) {
         error_log("LOGIN FAILED: user=$userid ip=$ip ua=$ua reason=session_timeout");
-        header("Location: file_search.php?logout=1");
+        header("Location: file_search.php?login_failed=1");
         exit;
     }
+
     $_SESSION['last_access'] = time();
 }
+
+// ======================================================
+//  ログイン試行制御（失敗回数・ロックアウト）
+// ======================================================
+
+// login_attempts テーブルから現在の状態を取得
+$stmt = $conn->prepare("SELECT fail_count, locked_until FROM login_attempts WHERE userid = ?");
+$stmt->bind_param("s", $userid);
+$stmt->execute();
+$res = $stmt->get_result();
+
+$fail_count = 0;
+$locked_until = null;
+
+if ($row = $res->fetch_assoc()) {
+    $fail_count = (int)$row['fail_count'];
+    $locked_until = $row['locked_until'];
+}
+
+// ======================================================
+//  ロックアウト中かチェック
+// ======================================================
+if ($locked_until !== null && strtotime($locked_until) > time()) {
+    $remaining = strtotime($locked_until) - time();
+    $minutes = ceil($remaining / 60);
+
+    error_log("LOGIN BLOCKED: user=$userid ip=$ip ua=$ua locked_until=$locked_until");
+
+    die("アカウントは一時ロックされています。あと {$minutes} 分後に再試行できます。");
+}
+
+// ======================================================
+//  ログイン失敗時の処理
+// ======================================================
+if (isset($_GET['login_failed'])) {
+
+    $fail_count++;
+    $now = date('Y-m-d H:i:s');
+
+    // 5回失敗で10分ロック
+    if ($fail_count >= 5) {
+        $locked_until = date('Y-m-d H:i:s', time() + 600); // 10分ロック
+
+        $stmt2 = $conn->prepare("
+            INSERT INTO login_attempts (userid, fail_count, last_fail, locked_until)
+            VALUES (?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE fail_count=?, last_fail=?, locked_until=?
+        ");
+        $stmt2->bind_param("sississ", $userid, $fail_count, $now, $locked_until, $fail_count, $now, $locked_until);
+        $stmt2->execute();
+
+        error_log("LOGIN FAILED & LOCKED: user=$userid ip=$ip ua=$ua");
+
+        die("ログイン失敗が続いたため、アカウントは10分間ロックされました。");
+    }
+
+    // 失敗回数を更新
+    $stmt2 = $conn->prepare("
+        INSERT INTO login_attempts (userid, fail_count, last_fail)
+        VALUES (?, ?, ?)
+        ON DUPLICATE KEY UPDATE fail_count=?, last_fail=?
+    ");
+    $stmt2->bind_param("sisis", $userid, $fail_count, $now, $fail_count, $now);
+    $stmt2->execute();
+
+    $remaining = 5 - $fail_count;
+
+    error_log("LOGIN FAILED: user=$userid ip=$ip ua=$ua fail_count=$fail_count");
+
+    die("ログイン失敗しました。残り試行回数：{$remaining} 回");
+}
+
+// ======================================================
+//  ログイン成功時（fail_countリセット）
+// ======================================================
+$stmt3 = $conn->prepare("DELETE FROM login_attempts WHERE userid = ?");
+$stmt3->bind_param("s", $userid);
+$stmt3->execute();
+
+error_log("LOGIN SUCCESS (fail_count reset): user=$userid ip=$ip ua=$ua");
 
 // ======================================================
 //  IAP ログアウト処理
@@ -45,22 +145,6 @@ if (isset($_POST['logout'])) {
     header("Location: https://web-app-787036707508.us-east1.run.app/_gcp_iap/clear_login_cookie");
     exit;
 }
-
-// ======================================================
-//  DB接続
-// ======================================================
-$dbname   = (string)getenv('DB_NAME');
-$username = (string)getenv('DB_USER');
-$password = (string)getenv('DB_PASS');
-
-$conn = new mysqli('127.0.0.1', $username, $password, $dbname, 3306);
-
-if ($conn->connect_error) {
-    error_log("DB CONNECT FAILED: ip=$ip ua=$ua error=" . $conn->connect_error);
-    die("CloudRun DB接続失敗: " . $conn->connect_error);
-}
-
-error_log("DB CONNECT SUCCESS: ip=$ip ua=$ua");
 
 // ======================================================
 //  初回ログイン時のセッション初期化
@@ -77,14 +161,10 @@ if (!isset($_SESSION['initialized'])) {
     $stmt2 = $conn->prepare(
         "INSERT INTO login_logs (userid, ip, ua, time) VALUES (?, ?, ?, ?)"
     );
-    $userid = $_SESSION['userid'] ?? 'unknown';
-    $ip     = $_SERVER['REMOTE_ADDR'];
-    $ua     = $_SERVER['HTTP_USER_AGENT'];
     $time   = date('Y-m-d H:i:s');
     $stmt2->bind_param("ssss", $userid, $ip, $ua, $time);
     $stmt2->execute();
 
-    // Cloud Logging にも出力（成功ログ）
     error_log("LOGIN SUCCESS: user=$userid ip=$ip ua=$ua");
 }
 
