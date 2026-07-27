@@ -53,7 +53,7 @@ $dbname   = (string)getenv('DB_NAME');
 $username = (string)getenv('DB_USER');
 $password = (string)getenv('DB_PASS');
 
-$conn = new mysqli('127.0.0.1', $username, $password, $dbname, 3306);
+$conn = new mysqli('10.89.49.3', $username, $password, $dbname, 3306);
 
 if ($conn->connect_error) {
     error_log("DB CONNECT FAILED: ip=$ip ua=$ua error=" . $conn->connect_error);
