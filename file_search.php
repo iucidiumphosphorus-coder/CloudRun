@@ -61,16 +61,8 @@ if (isset($_GET['logout'])) {
 $dbname   = getenv('DB_NAME');
 $username = getenv('DB_USER');
 $password = getenv('DB_PASS');
-$host     = getenv('DB_HOST');  // 127.0.0.1
-$port     = getenv('DB_PORT');  // 3306
 
-$conn = new mysqli(
-    $host,
-    $username,
-    $password,
-    $dbname,
-    $port
-);
+$conn = new mysqli('127.0.0.1', $username, $password, $dbname, 3306);
 
 if ($conn->connect_error) {
     error_log("DB CONNECT FAILED: ip=$ip ua=$ua error=" . $conn->connect_error);
