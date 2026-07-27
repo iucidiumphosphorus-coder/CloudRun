@@ -68,8 +68,8 @@ p.desc {
 input[type="text"] {
     width: 300px;
     padding: 12px;
-    font-size: 10px;
-    border: 1px solid #ccc;
+    font-size: 16px;
+    border: 1px solid #999;
     border-radius: 0px;
 }
 
