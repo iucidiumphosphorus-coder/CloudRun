@@ -13,7 +13,7 @@ ADD https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.10.1/
 RUN chmod +x /cloud-sql-proxy
 
 # Cloud SQL Proxy を起動（ソケット作成を待ってから Apache 起動）
-CMD ["/bin/sh","-c","/cloud-sql-proxy $DB_HOST --address 0.0.0.0 --port 3306 & sleep 5 && apache2-foreground"]
+CMD ["/bin/sh","-c","/cloud-sql-proxy $DB_CONNECTION_NAME --address 0.0.0.0 --port 3306 & sleep 5 && apache2-foreground"]
 
 # アプリ配置
 COPY . /var/www/html/
