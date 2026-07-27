@@ -34,15 +34,15 @@ error_log("DB CONNECT SUCCESS: ip=$ip ua=$ua");
 // ======================================================
 if (isset($_SESSION['initialized'])) {
 
-    // UAチェック
-    if ($_SESSION['ua'] !== $_SERVER['HTTP_USER_AGENT']) {
-        session_unset();
-        session_destroy();
-        header("Location: https://web-app-787036707508.us-east1.run.app/_gcp_iap/clear_login_cookie");
-        exit;
-    }
+    // UA(端末)不一致時に強制ログアウト
+    //if ($_SESSION['ua'] !== $_SERVER['HTTP_USER_AGENT']) {
+        //session_unset();
+        //session_destroy();
+        //header("Location: https://web-app-787036707508.us-east1.run.app/_gcp_iap/clear_login_cookie");
+        //exit;
+    //}
 
-    // セッション有効期限チェック（10分）
+    // 10分以上放置で自動ログアウト
     if (time() - $_SESSION['last_access'] > 600) { // 10分
         session_unset();
         session_destroy();
