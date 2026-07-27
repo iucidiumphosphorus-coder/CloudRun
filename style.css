@@ -48,7 +48,7 @@ p.desc {
 .logout a {
     background: #f5f5f5;
     border: 1px solid #ccc;
-    padding: 10px 16px;     /* ← 縦幅UP（上下10px） */
+    padding: 12px 16px;     /* ← 縦幅UP（上下10px） */
     line-height: 1.4em;     /* ← タイトルと高さを揃える */
     border-radius: 4px;
     text-decoration: none;
@@ -63,7 +63,7 @@ p.desc {
 ====================================================== */
 .search-box {
     background: #eee;      /* 背景色（薄いグレー） */
-    padding: 15px;         /* 内側の余白 */
+    padding: 8px 15px;         /* 内側の余白 */
     border-radius: 5px;    /* 角丸 */
     margin-bottom: 20px;   /* 下の余白 */
 }
