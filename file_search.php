@@ -3,15 +3,15 @@
 //  セッションのセキュリティ設定
 // ======================================================
 session_set_cookie_params([
-    'httponly' => true,
-    'secure' => true,
-    'samesite' => 'Strict'
+    'httponly' => true, //JavaScriptからCookieを読めなくする
+    'secure' => true, //HTTPS通信でしかCookieを送らない
+    'samesite' => 'Strict' //他サイトからのアクセスではCookieを送らない
 ]);
-session_start();
+session_start(); //セッションを開始し、セッションIDを発行
 
-$ip = $_SERVER['REMOTE_ADDR'];
-$ua = $_SERVER['HTTP_USER_AGENT'];
-$userid = $_SESSION['userid'] ?? 'unknown';
+$ip = $_SERVER['REMOTE_ADDR']; //クライアントのIPを取得(ログ用)
+$ua = $_SERVER['HTTP_USER_AGENT']; //ブラウザ情報（UA、端末情報）を取得
+$userid = $_SESSION['userid'] ?? 'unknown'; //セッション内のユーザー識別子を取得
 
 // ======================================================
 //  DB接続
@@ -20,17 +20,17 @@ $dbname   = getenv('DB_NAME');
 $username = getenv('DB_USER');
 $password = getenv('DB_PASS');
 
-$conn = new mysqli('127.0.0.1', $username, $password, $dbname, 3306);
+$conn = new mysqli('127.0.0.1', $username, $password, $dbname, 3306); //127.0.0.1、3306ポートは固定
 
-if ($conn->connect_error) {
+if ($conn->connect_error) { //エラーやミスで変数が変わった時、CloudSQL停止時用
     error_log("DB CONNECT FAILED: ip=$ip ua=$ua error=" . $conn->connect_error);
     die("CloudRun DB接続失敗: " . $conn->connect_error);
 }
 
-error_log("DB CONNECT SUCCESS: ip=$ip ua=$ua");
+error_log("DB CONNECT SUCCESS: ip=$ip ua=$ua"); //仕様でerror_logという名前だが、SQL接続成功時にユーザIPとUAを保存
 
 // ======================================================
-//  セッション盗難チェック
+//  強制ログアウト
 // ======================================================
 if (isset($_SESSION['initialized'])) {
 
@@ -53,7 +53,7 @@ if (isset($_SESSION['initialized'])) {
 }
 
 // ======================================================
-//  IAP ログアウト処理
+//  IAP ログアウトボタン用処理、この位置に書くことで余計な処理を挟まずログアウト
 // ======================================================
 if (isset($_POST['logout'])) {
     session_unset();
@@ -63,7 +63,7 @@ if (isset($_POST['logout'])) {
 }
 
 // ======================================================
-//  初回ログイン時のセッション初期化
+//  PHPセッションIDの初期化
 // ======================================================
 if (!isset($_SESSION['initialized'])) {
 
@@ -118,68 +118,7 @@ if ($search_word !== '') {
 <head>
     <meta charset="UTF-8">
     <title>📁 ファイル一覧・検索システム (CloudRun用)</title>
-    <style>
-        body {
-            font-family: "Segoe UI", "Hiragino Sans", sans-serif;
-            background-color: #f9f9f9;
-            margin: 0;
-            padding: 40px;
-        }
-        h1 {
-            font-size: 1.6em;
-            margin-bottom: 10px;
-        }
-        p.desc {
-            color: #333;
-            margin-bottom: 25px;
-        }
-        .logout {
-            position: absolute;
-            top: 20px;
-            right: 40px;
-        }
-        .logout a {
-            background: #f5f5f5;
-            border: 1px solid #ccc;
-            padding: 6px 12px;
-            border-radius: 4px;
-            text-decoration: none;
-            color: #333;
-        }
-        .search-box {
-            background: #eee;
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-        }
-        input[type="text"] {
-            width: 300px;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        button {
-            padding: 8px 16px;
-            border: none;
-            background: #666;
-            color: white;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            background: white;
-        }
-        th, td {
-            border: 1px solid #ccc;
-            padding: 10px;
-            text-align: left;
-        }
-        th {
-            background: #f0f0f0;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -193,11 +132,10 @@ if ($search_word !== '') {
 <p class="desc">CloudRunよる再現</p>
 
 <div class="search-box">
-    <form method="GET" action="file_search.php">
-        <input type="text" name="search" placeholder="ファイル名を入力（例: cisco, config）"
-       value="<?= htmlspecialchars($search_word, ENT_QUOTES, 'UTF-8') ?>">
-        <button type="submit">検索</button>
-    </form>
+  <form action="file_search.php" method="get">
+    <input type="text" name="query" placeholder="ファイル名を入力（例: cisco, config）">
+    <button type="submit">検索</button>
+  </form>
 </div>
 
 <table>
