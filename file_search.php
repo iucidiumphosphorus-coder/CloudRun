@@ -14,7 +14,7 @@ $ua = $_SERVER['HTTP_USER_AGENT'];
 $userid = $_SESSION['userid'] ?? 'unknown';
 
 // ======================================================
-//  DB接続（ログイン試行制御より前に必須）
+//  DB接続
 // ======================================================
 $dbname   = getenv('DB_NAME');
 $username = getenv('DB_USER');
@@ -30,111 +30,27 @@ if ($conn->connect_error) {
 error_log("DB CONNECT SUCCESS: ip=$ip ua=$ua");
 
 // ======================================================
-//  ログイン試行ログ（成功・失敗）
-// ======================================================
-error_log("LOGIN ATTEMPT: user=$userid ip=$ip ua=$ua");
-
-// ======================================================
 //  セッション盗難チェック
 // ======================================================
 if (isset($_SESSION['initialized'])) {
 
     // UAチェック
     if ($_SESSION['ua'] !== $_SERVER['HTTP_USER_AGENT']) {
-        error_log("LOGIN FAILED: user=$userid ip=$ip ua=$ua reason=ua_mismatch");
-        header("Location: file_search.php?login_failed=1");
+        session_unset();
+        session_destroy();
+        header("Location: https://web-app-787036707508.us-east1.run.app/_gcp_iap/clear_login_cookie");
         exit;
     }
 
-    // セッション有効期限チェック（30分）
-    if (time() - $_SESSION['last_access'] > 1800) {
-        error_log("LOGIN FAILED: user=$userid ip=$ip ua=$ua reason=session_timeout");
-        header("Location: file_search.php?login_failed=1");
+    // セッション有効期限チェック（10分）
+    if (time() - $_SESSION['last_access'] > 600) { // 10分
+        session_unset();
+        session_destroy();
+        header("Location: https://web-app-787036707508.us-east1.run.app/_gcp_iap/clear_login_cookie");
         exit;
     }
-
     $_SESSION['last_access'] = time();
 }
-
-// ======================================================
-//  ログイン試行制御（失敗回数・ロックアウト）
-// ======================================================
-
-// login_attempts テーブルから現在の状態を取得
-$stmt = $conn->prepare("SELECT fail_count, locked_until FROM login_attempts WHERE userid = ?");
-$stmt->bind_param("s", $userid);
-$stmt->execute();
-$res = $stmt->get_result();
-
-$fail_count = 0;
-$locked_until = null;
-
-if ($row = $res->fetch_assoc()) {
-    $fail_count = (int)$row['fail_count'];
-    $locked_until = $row['locked_until'];
-}
-
-// ======================================================
-//  ロックアウト中かチェック
-// ======================================================
-if ($locked_until !== null && strtotime($locked_until) > time()) {
-    $remaining = strtotime($locked_until) - time();
-    $minutes = ceil($remaining / 60);
-
-    error_log("LOGIN BLOCKED: user=$userid ip=$ip ua=$ua locked_until=$locked_until");
-
-    die("アカウントは一時ロックされています。あと {$minutes} 分後に再試行できます。");
-}
-
-// ======================================================
-//  ログイン失敗時の処理
-// ======================================================
-if (isset($_GET['login_failed'])) {
-
-    $fail_count++;
-    $now = date('Y-m-d H:i:s');
-
-    // 5回失敗で10分ロック
-    if ($fail_count >= 5) {
-        $locked_until = date('Y-m-d H:i:s', time() + 600); // 10分ロック
-
-        $stmt2 = $conn->prepare("
-            INSERT INTO login_attempts (userid, fail_count, last_fail, locked_until)
-            VALUES (?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE fail_count=?, last_fail=?, locked_until=?
-        ");
-        $stmt2->bind_param("sississ", $userid, $fail_count, $now, $locked_until, $fail_count, $now, $locked_until);
-        $stmt2->execute();
-
-        error_log("LOGIN FAILED & LOCKED: user=$userid ip=$ip ua=$ua");
-
-        die("ログイン失敗が続いたため、アカウントは10分間ロックされました。");
-    }
-
-    // 失敗回数を更新
-    $stmt2 = $conn->prepare("
-        INSERT INTO login_attempts (userid, fail_count, last_fail)
-        VALUES (?, ?, ?)
-        ON DUPLICATE KEY UPDATE fail_count=?, last_fail=?
-    ");
-    $stmt2->bind_param("sisis", $userid, $fail_count, $now, $fail_count, $now);
-    $stmt2->execute();
-
-    $remaining = 5 - $fail_count;
-
-    error_log("LOGIN FAILED: user=$userid ip=$ip ua=$ua fail_count=$fail_count");
-
-    die("ログイン失敗しました。残り試行回数：{$remaining} 回");
-}
-
-// ======================================================
-//  ログイン成功時（fail_countリセット）
-// ======================================================
-$stmt3 = $conn->prepare("DELETE FROM login_attempts WHERE userid = ?");
-$stmt3->bind_param("s", $userid);
-$stmt3->execute();
-
-error_log("LOGIN SUCCESS (fail_count reset): user=$userid ip=$ip ua=$ua");
 
 // ======================================================
 //  IAP ログアウト処理
