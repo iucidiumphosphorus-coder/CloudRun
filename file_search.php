@@ -118,3 +118,56 @@ if ($search_word !== '') {
     $result = $conn->query($sql);
 }
 ?>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>ファイル検索システム</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; }
+        th { background: #f0f0f0; }
+        input[type="text"] { width: 300px; padding: 6px; }
+        button { padding: 6px 12px; }
+        .logout {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="logout">
+    <a href="file_search.php?logout=1">ログアウト</a>
+</div>
+
+<h2>ファイル検索</h2>
+
+<form method="GET" action="file_search.php">
+    <input type="text" name="search" placeholder="検索ワード" value="<?= htmlspecialchars($search_word) ?>">
+    <button type="submit">検索</button>
+</form>
+
+<table>
+    <tr>
+        <th>ID</th>
+        <th>ファイル名</th>
+        <th>カテゴリ</th>
+        <th>作成日</th>
+    </tr>
+
+    <?php while ($row = $result->fetch_assoc()): ?>
+        <tr>
+            <td><?= htmlspecialchars($row['id']) ?></td>
+            <td><?= htmlspecialchars($row['file_name']) ?></td>
+            <td><?= htmlspecialchars($row['category']) ?></td>
+            <td><?= htmlspecialchars($row['created_at']) ?></td>
+        </tr>
+    <?php endwhile; ?>
+
+</table>
+
+</body>
+</html>
