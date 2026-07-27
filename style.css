@@ -3,7 +3,7 @@
    対象：file_search.php の <body> 全体
 ====================================================== */
 body {
-    font-family: "Segoe UI", "Hiragino Sans", sans-serif;
+    font-family: sans-serif;
     background-color: #f9f9f9;
     margin: 0;
     padding: 40px;
@@ -13,9 +13,10 @@ body {
    <h1> タイトル部分
    対象：📁 ファイル一覧・検索システム (CloudRun用)
 ====================================================== */
-h1 {
+h1, h2 {
     font-size: 1.6em;
-    margin-bottom: 10px;
+    margin: 0 0 10px 0;
+    font-weight: normal;
 }
 
 /* ======================================================
@@ -24,7 +25,7 @@ h1 {
 ====================================================== */
 p.desc {
     color: #333;
-    margin-bottom: 25px;
+    margin-bottom: 20px;
 }
 
 /* ======================================================
@@ -33,7 +34,7 @@ p.desc {
 ====================================================== */
 .logout {
     position: absolute;
-    top: 20px;
+    top: 40px;
     right: 40px;
 }
 
@@ -57,7 +58,7 @@ p.desc {
 .search-box {
     background: #eee;      /* 背景色（薄いグレー） */
     padding: 15px;         /* 内側の余白 */
-    border-radius: 6px;    /* 角丸 */
+    border-radius: 5px;    /* 角丸 */
     margin-bottom: 20px;   /* 下の余白 */
 }
 
@@ -65,41 +66,44 @@ p.desc {
    検索入力欄
    対象：<input type="text" name="query">
 ====================================================== */
-input[type="text"] {
+.search-box input[type="text"] {
+    padding: 8px 15px;
     width: 300px;
-    padding: 12px;
     font-size: 16px;
-    border: 1px solid #999;
-    border-radius: 0px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
 }
 
 /* ======================================================
    検索ボタン
    対象：<button type="submit">検索</button>
 ====================================================== */
-button {
-    padding: 12px;
-    border: none;
-    background: #ccc;
-    color: black;
-    border-radius: 0px;
+.search-box button,
+.search-box input[type="submit"] {
+    padding: 8px 15px;
+    font-size: 16px;
     cursor: pointer;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
 }
-
-/* ======================================================
-   テーブル全体
-   対象：<table> ～ ファイル一覧
-====================================================== */
-table {
-    border-collapse: collapse;
-    width: 100%;
-    background: white;
+/* クリアリンク */
+.search-box a {
+    margin-left: 10px;
+    font-size: 14px;
 }
 
 /* ======================================================
    テーブルのセル（th, td）
    対象：ID / ファイル名 / カテゴリ / 登録日時
 ====================================================== */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background: #fff;
+}
+
 th, td {
     border: 1px solid #ccc;
     padding: 10px;
@@ -111,5 +115,5 @@ th, td {
    対象：<th> の背景色
 ====================================================== */
 th {
-    background: #f0f0f0;
+    background: #e0e0e0;
 }
