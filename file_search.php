@@ -58,18 +58,18 @@ if (isset($_GET['logout'])) {
 // ======================================================
 //  DB接続
 // ======================================================
-$dbname   = 'test_db';
-$username = 'testsql1';
-$password = 'testsql1';
-
-mysqli_report(MYSQLI_REPORT_OFF);
+$dbname   = getenv('DB_NAME');
+$username = getenv('DB_USER');
+$password = getenv('DB_PASS');
+$host     = getenv('DB_HOST');  // 127.0.0.1
+$port     = getenv('DB_PORT');  // 3306
 
 $conn = new mysqli(
-    '127.0.0.1',
-    'testsql1',
-    'testsql1',
-    'test_db',
-    3306
+    $host,
+    $username,
+    $password,
+    $dbname,
+    $port
 );
 
 if ($conn->connect_error) {
