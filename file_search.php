@@ -133,7 +133,7 @@ if ($search_word !== '') {
 
 <div class="search-box">
   <form action="file_search.php" method="get">
-    <input type="text" name="query" placeholder="ファイル名を入力（例: cisco, config）">
+    <input type="text" name="search" placeholder="ファイル名を入力（例: cisco, config）">
     <button type="submit">検索</button>
   </form>
 </div>
