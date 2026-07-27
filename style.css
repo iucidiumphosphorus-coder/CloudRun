@@ -78,10 +78,10 @@ input[type="text"] {
    対象：<button type="submit">検索</button>
 ====================================================== */
 button {
-    padding: 8px 16px;
+    padding: 12px;
     border: none;
-    background: #666;
-    color: white;
+    background: #ccc;
+    color: black;
     border-radius: 0px;
     cursor: pointer;
 }
