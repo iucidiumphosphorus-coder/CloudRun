@@ -21,36 +21,27 @@ error_log("LOGIN ATTEMPT: user=$userid ip=$ip ua=$ua");
 //  セッション盗難チェック
 // ======================================================
 if (isset($_SESSION['initialized'])) {
-
-    // IPチェック
-    if ($_SESSION['ip'] !== $_SERVER['REMOTE_ADDR']) {
-        error_log("LOGIN FAILED: user=$userid ip=$ip ua=$ua reason=ip_mismatch");
-        header("Location: file_search.php?logout=1");
-        exit;
-    }
-
     // UAチェック
     if ($_SESSION['ua'] !== $_SERVER['HTTP_USER_AGENT']) {
         error_log("LOGIN FAILED: user=$userid ip=$ip ua=$ua reason=ua_mismatch");
         header("Location: file_search.php?logout=1");
         exit;
     }
-
     // セッション有効期限チェック（30分）
     if (time() - $_SESSION['last_access'] > 1800) {
         error_log("LOGIN FAILED: user=$userid ip=$ip ua=$ua reason=session_timeout");
         header("Location: file_search.php?logout=1");
         exit;
     }
-
     $_SESSION['last_access'] = time();
 }
 
 // ======================================================
 //  IAP ログアウト処理
 // ======================================================
-if (isset($_GET['logout'])) {
-    error_log("SESSION END: user=$userid ip=$ip ua=$ua");
+if (isset($_POST['logout'])) {
+    session_unset();
+    session_destroy();
     header("Location: https://web-app-787036707508.us-east1.run.app/_gcp_iap/clear_login_cookie");
     exit;
 }
@@ -101,9 +92,14 @@ if (!isset($_SESSION['initialized'])) {
 //  検索処理
 // ======================================================
 $search_word = isset($_GET['search']) ? $_GET['search'] : '';
-
+// 検索語の長さ制限（DoS対策）
+if (strlen($search_word) > 100) {
+    die("検索ワードが長すぎます");
+}
 if ($search_word !== '') {
-    error_log("FILE SEARCH: user=$userid ip=$ip query=\"$search_word\"");
+    $search_log = str_replace(["\n", "\r"], '', $search_word);
+    error_log("FILE SEARCH: user=$userid ip=$ip query=\"$search_log\"");
+
     $stmt = $conn->prepare(
         "SELECT id, file_name, category, created_at
          FROM files
@@ -114,15 +110,18 @@ if ($search_word !== '') {
     $stmt->execute();
     $result = $stmt->get_result();
 } else {
-    $sql    = "SELECT id, file_name, category, created_at FROM files";
-    $result = $conn->query($sql);
+    $stmt = $conn->prepare(
+        "SELECT id, file_name, category, created_at FROM files"
+    );
+    $stmt->execute();
+    $result = $stmt->get_result();
 }
 ?>
 <!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>📁 ファイル一覧・検索システム (CloudSQL検証用)</title>
+    <title>📁 ファイル一覧・検索システム (CloudRun用)</title>
     <style>
         body {
             font-family: "Segoe UI", "Hiragino Sans", sans-serif;
@@ -189,15 +188,18 @@ if ($search_word !== '') {
 <body>
 
 <div class="logout">
-    <a href="file_search.php?logout=1">ログアウト（IAPの内部セッション削除）</a>
+    <form method="POST" action="file_search.php">
+        <button name="logout" value="1">ログアウト（IAPの内部セッション削除）</button>
+    </form>
 </div>
 
-<h1>📁 ファイル一覧・検索システム (CloudSQL検証用)</h1>
-<p class="desc">GoogleCloudのVMとCloudSQLによるDBの連携検証画面</p>
+<h1>📁 ファイル一覧・検索システム (CloudRun用)</h1>
+<p class="desc">CloudRunよる再現</p>
 
 <div class="search-box">
     <form method="GET" action="file_search.php">
-        <input type="text" name="search" placeholder="ファイル名を入力（例: cisco, config）" value="<?= htmlspecialchars($search_word) ?>">
+        <input type="text" name="search" placeholder="ファイル名を入力（例: cisco, config）"
+       value="<?= htmlspecialchars($search_word, ENT_QUOTES, 'UTF-8') ?>">
         <button type="submit">検索</button>
     </form>
 </div>
@@ -212,10 +214,10 @@ if ($search_word !== '') {
 
     <?php while ($row = $result->fetch_assoc()): ?>
         <tr>
-            <td><?= htmlspecialchars($row['id']) ?></td>
-            <td><?= htmlspecialchars($row['file_name']) ?></td>
-            <td><?= htmlspecialchars($row['category']) ?></td>
-            <td><?= htmlspecialchars($row['created_at']) ?></td>
+            <td><?= htmlspecialchars($row['id'], ENT_QUOTES, 'UTF-8') ?></td>
+            <td><?= htmlspecialchars($row['file_name'], ENT_QUOTES, 'UTF-8') ?></td>
+            <td><?= htmlspecialchars($row['category'], ENT_QUOTES, 'UTF-8') ?></td>
+            <td><?= htmlspecialchars($row['created_at'], ENT_QUOTES, 'UTF-8') ?></td>
         </tr>
     <?php endwhile; ?>
 </table>
