@@ -49,9 +49,9 @@ if (isset($_POST['logout'])) {
 // ======================================================
 //  DB接続
 // ======================================================
-$dbname   = $_SERVER['DB_NAME'];
-$username = $_SERVER['DB_USER'];
-$password = $_SERVER['DB_PASS'];
+$dbname   = getenv('DB_NAME');
+$username = getenv('DB_USER');
+$password = getenv('DB_PASS');
 
 $conn = new mysqli('127.0.0.1', $username, $password, $dbname, 3306);
 
