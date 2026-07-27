@@ -122,40 +122,92 @@ if ($search_word !== '') {
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>ファイル検索システム</title>
+    <title>📁 ファイル一覧・検索システム (CloudSQL検証用)</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; }
-        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-        th, td { border: 1px solid #ccc; padding: 8px; }
-        th { background: #f0f0f0; }
-        input[type="text"] { width: 300px; padding: 6px; }
-        button { padding: 6px 12px; }
+        body {
+            font-family: "Segoe UI", "Hiragino Sans", sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 40px;
+        }
+        h1 {
+            font-size: 1.6em;
+            margin-bottom: 10px;
+        }
+        p.desc {
+            color: #333;
+            margin-bottom: 25px;
+        }
         .logout {
             position: absolute;
             top: 20px;
-            right: 20px;
+            right: 40px;
+        }
+        .logout a {
+            background: #f5f5f5;
+            border: 1px solid #ccc;
+            padding: 6px 12px;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #333;
+        }
+        .search-box {
+            background: #eee;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            width: 300px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 8px 16px;
+            border: none;
+            background: #666;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            background: white;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background: #f0f0f0;
         }
     </style>
 </head>
 <body>
 
 <div class="logout">
-    <a href="file_search.php?logout=1">ログアウト</a>
+    <a href="file_search.php?logout=1">ログアウト（IAPの内部セッション削除）</a>
 </div>
 
-<h2>ファイル検索</h2>
+<h1>📁 ファイル一覧・検索システム (CloudSQL検証用)</h1>
+<p class="desc">GoogleCloudのVMとCloudSQLによるDBの連携検証画面</p>
 
-<form method="GET" action="file_search.php">
-    <input type="text" name="search" placeholder="検索ワード" value="<?= htmlspecialchars($search_word) ?>">
-    <button type="submit">検索</button>
-</form>
+<div class="search-box">
+    <form method="GET" action="file_search.php">
+        <input type="text" name="search" placeholder="ファイル名を入力（例: cisco, config）" value="<?= htmlspecialchars($search_word) ?>">
+        <button type="submit">検索</button>
+    </form>
+</div>
 
 <table>
     <tr>
         <th>ID</th>
         <th>ファイル名</th>
         <th>カテゴリ</th>
-        <th>作成日</th>
+        <th>登録日時</th>
     </tr>
 
     <?php while ($row = $result->fetch_assoc()): ?>
@@ -166,7 +218,6 @@ if ($search_word !== '') {
             <td><?= htmlspecialchars($row['created_at']) ?></td>
         </tr>
     <?php endwhile; ?>
-
 </table>
 
 </body>
