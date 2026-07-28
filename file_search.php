@@ -129,7 +129,7 @@ if ($search_word !== '') {
     </form>
 </div>
 
-<h1>📁 ファイル一覧・検索システム</h1>
+<h1>📁 ファイル一覧・検索システム　※7月29日02:00にメンテナンスを行います</h1>
 <p class="desc">GoogleCloudでオンプレミス環境を再現</p>
 
 <div class="search-box">
