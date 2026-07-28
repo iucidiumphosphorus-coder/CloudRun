@@ -1,6 +1,7 @@
 <?php
 // ======================================================
 //  セッションのセキュリティ設定
+//  CSRFは構造的に成立しない
 // ======================================================
 session_set_cookie_params([
     'httponly' => true, //JavaScriptからCookieを読めなくする
@@ -85,7 +86,7 @@ if (!isset($_SESSION['initialized'])) {
 }
 
 // ======================================================
-//  検索処理
+//  検索処理(SQLインジェクション対策のためSQL不使用)
 // ======================================================
 $search_word = isset($_GET['search']) ? $_GET['search'] : '';
 // 検索語の長さ制限（DoS対策）
@@ -147,7 +148,7 @@ if ($search_word !== '') {
     </tr>
 
     <?php while ($row = $result->fetch_assoc()): ?>
-        <tr>
+        <tr> <!--XSS(HTML に紛れ込む形で JavaScript を実行させる攻撃)対策で、<や"を安全な文字列に変換-->
             <td><?= htmlspecialchars($row['id'], ENT_QUOTES, 'UTF-8') ?></td>
             <td><?= htmlspecialchars($row['file_name'], ENT_QUOTES, 'UTF-8') ?></td>
             <td><?= htmlspecialchars($row['category'], ENT_QUOTES, 'UTF-8') ?></td>
