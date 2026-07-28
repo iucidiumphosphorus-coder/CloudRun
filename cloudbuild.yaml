@@ -1,13 +1,27 @@
 options:
   logging: CLOUD_LOGGING_ONLY
+  # Cloud Build のログ出力を Cloud Logging のみに限定する設定
+  # （ビルドログが Cloud Logging に送られる）
 
 steps:
+  # ================================
+  # ① Docker イメージをビルドする
+  # ================================
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build', '-t', 'us-east1-docker.pkg.dev/cloudrun-503301/web-app/web-app:latest', '.']
+    # '.'（カレントディレクトリ）から Dockerfile を使ってイメージを作成
+    # -t で Artifact Registry のリポジトリにタグ付け
 
+  # ================================
+  # ② Artifact Registry に push する
+  # ================================
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'us-east1-docker.pkg.dev/cloudrun-503301/web-app/web-app:latest']
+    # 上でビルドしたイメージを Artifact Registry にアップロード
 
+  # ================================
+  # ③ Cloud Run にデプロイする
+  # ================================
   - name: 'gcr.io/cloud-builders/gcloud'
     args: [
       'run', 'deploy', 'web-app',
@@ -15,6 +29,11 @@ steps:
       '--region', 'us-east1',
       '--platform', 'managed'
     ]
+    # gcloud run deploy を使って Cloud Run にデプロイ
+    # --image で push 済みのイメージを指定
+    # --region us-east1 にデプロイ
+    # --platform managed は Cloud Run（フルマネージド）を意味する
 
 images:
   - 'us-east1-docker.pkg.dev/cloudrun-503301/web-app/web-app:latest'
+  # Cloud Build のビルド成果物として登録されるDockerイメージ
