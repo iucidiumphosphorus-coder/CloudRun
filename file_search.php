@@ -117,7 +117,7 @@ if ($search_word !== '') {
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>📁 ファイル一覧・検索システム (CloudRun用)</title>
+    <title>📁 ファイル一覧・検索システム</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -129,7 +129,7 @@ if ($search_word !== '') {
 </div>
 
 <h1>📁 ファイル一覧・検索システム (CloudRun用)</h1>
-<p class="desc">CloudRunよる再現</p>
+<p class="desc">Cloudよる再現</p>
 
 <div class="search-box">
   <form action="file_search.php" method="get">
