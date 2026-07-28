@@ -128,8 +128,8 @@ if ($search_word !== '') {
     </form>
 </div>
 
-<h1>📁 ファイル一覧・検索システム (CloudRun用)</h1>
-<p class="desc">Cloudよる再現</p>
+<h1>📁 ファイル一覧・検索システム</h1>
+<p class="desc">GoogleCloudでオンプレミス環境を再現</p>
 
 <div class="search-box">
   <form action="file_search.php" method="get">
